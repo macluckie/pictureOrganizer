@@ -4,6 +4,9 @@ from tkinter import ttk
 from PIL import ImageTk, Image
 import os
 from pathlib import Path
+import connectdatabase as db
+
+
 
 
 
@@ -31,7 +34,7 @@ class Display:
 
   
     def handlerContent(self,contentFolder,frame,directorie):
-     
+        bdd = db.connexion()
         progress = ttk.Progressbar(self.root, orient = HORIZONTAL,length = 100, mode = 'determinate')
         progress.pack(side = "top")
 
@@ -67,6 +70,7 @@ class Display:
     
             for extension in extensions:               
                 if imge.lower().endswith(extension):
+                    bdd.insert(directorie + "/"+ imge,(time.ctime(os.path.getctime(directorie + "/"+ imge)).split()[int(len(time.ctime(os.path.getctime(directorie + "/"+ imge)).split())) - 1]))
                     i = i+1           
                     globals()['canvas'+str(i)] = Canvas(frame,width = 350,height = 350, background = "green")
                     globals()['canvas'+str(i)].pack()   
@@ -75,9 +79,10 @@ class Display:
                     texteLabel = Label(globals()['canvas'+str(i)], text = directorie + "/"+ imge, image =   globals()['image'+str(i)], compound = 'top')
                     texteLabel.pack()
                     
+       
         progress['value'] = 100
         self.root.update_idletasks() 
-
+        bdd.selectAll()
 
 
 
