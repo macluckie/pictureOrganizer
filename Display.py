@@ -9,11 +9,12 @@ import connectdatabase as db
 
 class Display:
 
-    def __init__(self,root):
+    def __init__(self,root,limit=440):
         self.root = root
         self.frameLabel = "NULL"  
-        self.limit = 440
+        self.limit = limit
 
+ 
     def UploadAction(self):
         directorie = filedialog.askdirectory()
         contentFolder =  os.listdir(directorie)             
@@ -24,8 +25,11 @@ class Display:
     def handlerContent(self,contentFolder,directorie):
         bdd = db.connexion()
         self.frameLabel.pack_forget()
-        progress = ttk.Progressbar(self.root, orient = HORIZONTAL,length = 400, mode = 'determinate')
-        progress.pack(side = "top")
+        wrapper = LabelFrame(self.root)
+        wrapper.pack(fill = "both", expand = True) 
+        self.frameLabel = wrapper
+        progress = ttk.Progressbar(wrapper, orient = HORIZONTAL,length = 400)
+        progress.place(x = 300,y = 500)
         extensions = ['jpeg','jpg','png']
         i =0
         for imge in contentFolder:     
@@ -33,8 +37,7 @@ class Display:
                 i = i+ 1     
             
             progress['value'] = i
-            self.root.update_idletasks() 
-          
+            self.root.update_idletasks()          
             
             if os.path.isdir(directorie + "/"+ imge):
                 path = Path(directorie + "/"+ imge)               
@@ -45,12 +48,13 @@ class Display:
                         if (len(bdd.checkDoublon(directorie + "/"+ imge)) == 0):
                             bdd.insert(directorie + "/"+ imge,(time.ctime(os.path.getctime(directorie + "/"+ imge)).split()[int(len(time.ctime(os.path.getctime(directorie + "/"+ imge)).split())) - 1]))
 
-        progress.pack_forget() 
-        
-        progress2 = ttk.Progressbar(self.root, orient = HORIZONTAL,length = 400, mode = 'determinate')
-        progress2.pack(side = "top")                   
-        progress2['value'] = 100
-        self.root.update_idletasks() 
+        for i in range(100):
+            i = i+ 1
+            progress['value'] = i
+            self.root.update_idletasks()    
+
+        texte = Label(wrapper, text="AJOUT TERMINE", font='bold')
+        texte.place(x = 400,y = 520)
        
 
     def homePage(self):
@@ -70,17 +74,18 @@ class Display:
         self.frameLabel.pack_forget()
         bdd = db.connexion()
         pathImages = bdd.getPictureByYear(date)      
-        self.displayer(pathImages,0,date)
+        self.displayer(pathImages,0,date,str(date))
 
 
 
-    def displayer(self,ListPicture,ofset = 0,filter = 0):
+    def displayer(self,ListPicture,ofset = 0,filter = 0,categorie=""):
         j = 0
         y = 0
-        wrapper = LabelFrame(self.root)
-       
+        wrapper = LabelFrame(self.root)       
         self.frameLabel = wrapper
         bigCanva = Canvas(wrapper)
+        texte = Label(wrapper, text= categorie, font='bold')
+        texte.place(x = 500,y = 0)
         frame = Frame(bigCanva) 
         previous = Button(bigCanva,text="previous",command= lambda o = ofset, f = filter: self.paginatePrev(o,f))
         previous.place(x=0,y=0) 
@@ -110,19 +115,19 @@ class Display:
 
 
 
-    def all(self):
+    def all(self):      
         self.frameLabel.pack_forget()
         bdd = db.connexion()
         pathImages = bdd.selectAll()  
-        self.displayer(pathImages)
+        self.displayer(pathImages,0,0,"ALL")
 
     def paginateNext(self,ofset,filter):
         bdd = db.connexion()
-        pathImages = bdd.paginatePicture(str(ofset),filter)
+        pathImages = bdd.paginatePicture(int(ofset) + int(self.limit),filter)
         if len(pathImages) == 0:
             return FALSE
         self.frameLabel.pack_forget()    
-        self.displayer(pathImages,(int(ofset) + int(self.limit)),filter )
+        self.displayer(pathImages,(int(ofset) + int(self.limit)),filter, str(filter if filter > 0 else ""))
 
 
     def paginatePrev(self,ofset,filter):
@@ -132,7 +137,7 @@ class Display:
             pathImages = bdd.paginatePicture(int(ofset) - int(self.limit),filter)
             if len(pathImages) == 0:
                 return FALSE
-            self.displayer(pathImages,(int(ofset) - int(self.limit)),filter )
+            self.displayer(pathImages,(int(ofset) - int(self.limit)),filter,str(filter if filter > 0 else ""))
         else:
             return FALSE        
 

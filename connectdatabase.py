@@ -1,12 +1,12 @@
 import sqlite3
-import display
 
 class connexion:
 
-    def __init__(self):  
-        self.limit = 440
+    def __init__(self, limit = 440):  
+        self.limit = limit
+        self.timeout = 3000
         try:            
-            sqliteConnection=sqlite3.connect('picture_orga.db',timeout=30000)
+            sqliteConnection=sqlite3.connect('picture_orga.db',self.timeout)
             cursor = sqliteConnection.cursor()
             print("Database created and Successfully Connected to SQLite")
 
@@ -25,20 +25,20 @@ class connexion:
             print("The SQLite connection is closed")
 
     def insert(self,path,date):
-        sql=sqlite3.connect('picture_orga.db',timeout=30000)
+        sql=sqlite3.connect('picture_orga.db',self.timeout)
         sql.execute("INSERT INTO picture (path,date) VALUES(?,?)",(path,date))
         sql.commit()
         sql.close()
 
     def selectAll(self):
-        sql=sqlite3.connect('picture_orga.db',timeout=30000)
+        sql=sqlite3.connect('picture_orga.db',self.timeout)
         res = sql.execute("SELECT * FROM picture LIMIT "+ str(self.limit))
         result = res.fetchall()
         sql.close()
         return result
 
     def checkDoublon(self,path):
-        sql=sqlite3.connect('picture_orga.db',timeout=30000)
+        sql=sqlite3.connect('picture_orga.db',self.timeout)
         res = sql.execute("SELECT path FROM picture WHERE path= ?",(path,))
         result = res.fetchall()
         sql.close()
@@ -46,7 +46,7 @@ class connexion:
 
 
     def filterList(self):
-        sql=sqlite3.connect('picture_orga.db',timeout=30000)
+        sql=sqlite3.connect('picture_orga.db',self.timeout)
         res = sql.execute("SELECT DISTINCT date FROM picture")
         result = res.fetchall()
         sql.close()
@@ -54,22 +54,20 @@ class connexion:
 
 
     def getPictureByYear(self,year):
-        sql=sqlite3.connect('picture_orga.db',timeout=30000)
-        res = sql.execute("SELECT path  FROM picture WHERE date= ? LIMIT "+ str(self.limit) + "",(year,))
+        sql=sqlite3.connect('picture_orga.db',self.timeout)
+        res = sql.execute("SELECT path  FROM picture WHERE date= ? LIMIT ?",(year,str(self.limit)))
         result = res.fetchall()
         sql.close()
         return result
 
 
-    def paginatePicture(self,ofset,filtre):
-        sql=sqlite3.connect('picture_orga.db',timeout=30000)
-        if int(filtre) > 0: 
-            
-            # print('filter sup à 0')     
-            # print(filtre)      
-            res = sql.execute("SELECT * FROM picture WHERE date="+ str(filtre) + " LIMIT " + str(ofset) + "," + str(self.limit))
+    def paginatePicture(self,ofset,filtre):     
+        sql=sqlite3.connect('picture_orga.db',self.timeout)
+        if int(filtre) > 0:                
+            res = sql.execute("SELECT * FROM picture WHERE date= ? LIMIT ?,?" ,(str(filtre), str(ofset),str(self.limit)))
         else:            
-            res = sql.execute("SELECT *  FROM picture  LIMIT ? ," + str(self.limit) + "",(ofset,))                            
+            res = sql.execute("SELECT *  FROM picture  LIMIT ?, ?",(ofset,str(self.limit)))       
+                                 
         result = res.fetchall()        
         sql.close()
         return result
